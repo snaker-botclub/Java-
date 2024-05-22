@@ -1,0 +1,177 @@
+import java.util.*;
+
+class Station {
+    String name;
+    Map<Station, Double> neighbors; // 邻近站点及距离
+    Set<String> lines; // 经过的线路
+
+    Station(String name) {
+        this.name = name;
+        this.neighbors = new HashMap<>();
+        this.lines = new HashSet<>();
+    }
+
+    void addNeighbor(Station neighbor, double distance, String line) {
+        neighbors.put(neighbor, distance);
+        lines.add(line);
+    }
+}
+
+class SubwaySystem {
+    Map<String, Station> stations; // 站点名称到站点对象的映射
+
+    SubwaySystem() {
+        stations = new HashMap<>();
+    }
+
+    void addConnection(String stationA, String stationB, double distance, String line) {
+        Station a = stations.computeIfAbsent(stationA, Station::new);
+        Station b = stations.computeIfAbsent(stationB, Station::new);
+        a.addNeighbor(b, distance, line);
+        b.addNeighbor(a, distance, line); // 双向连接
+    }
+
+    Set<Station> getTransferStations() {
+        Set<Station> transferStations = new HashSet<>();
+        for (Station station : stations.values()) {
+            if (station.lines.size() > 1) {
+                transferStations.add(station);
+            }
+        }
+        return transferStations;
+    }
+
+    List<Station> getNearbyStations(String stationName, double maxDistance) throws IllegalArgumentException {
+        if (!stations.containsKey(stationName)) throw new IllegalArgumentException("Station not found");
+        Station station = stations.get(stationName);
+        List<Station> nearbyStations = new ArrayList<>();
+        for (Map.Entry<Station, Double> entry : station.neighbors.entrySet()) {
+            if (entry.getValue() <= maxDistance) {
+                nearbyStations.add(entry.getKey());
+            }
+        }
+        return nearbyStations;
+    }
+
+    List<List<Station>> getAllPaths(String start, String end) throws IllegalArgumentException {
+        if (!stations.containsKey(start) || !stations.containsKey(end)) throw new IllegalArgumentException("Invalid station names");
+        List<List<Station>> allPaths = new ArrayList<>();
+        getAllPaths(stations.get(start), stations.get(end), new HashSet<>(), new ArrayList<>(), allPaths);
+        return allPaths;
+    }
+
+    private void getAllPaths(Station start, Station end, Set<Station> visited, List<Station> path, List<List<Station>> allPaths) {
+        visited.add(start);
+        path.add(start);
+        if (start.equals(end)) {
+            allPaths.add(new ArrayList<>(path));
+        } else {
+            for (Station neighbor : start.neighbors.keySet()) {
+                if (!visited.contains(neighbor)) {
+                    getAllPaths(neighbor, end, visited, path, allPaths);
+                }
+            }
+        }
+        path.remove(path.size() - 1);
+        visited.remove(start);
+    }
+
+    List<Station> getShortestPath(String start, String end) throws IllegalArgumentException {
+        if (!stations.containsKey(start) || !stations.containsKey(end)) throw new IllegalArgumentException("Invalid station names");
+        return dijkstra(stations.get(start), stations.get(end));
+    }
+
+    private List<Station> dijkstra(Station start, Station end) {
+        Map<Station, Double> distances = new HashMap<>();
+        Map<Station, Station> previous = new HashMap<>();
+        PriorityQueue<Station> queue = new PriorityQueue<>(Comparator.comparingDouble(distances::get));
+
+        for (Station station : stations.values()) {
+            distances.put(station, Double.POSITIVE_INFINITY);
+            previous.put(station, null);
+        }
+        distances.put(start, 0.0);
+        queue.add(start);
+
+        while (!queue.isEmpty()) {
+            Station current = queue.poll();
+            if (current.equals(end)) break;
+            for (Map.Entry<Station, Double> entry : current.neighbors.entrySet()) {
+                Station neighbor = entry.getKey();
+                double alt = distances.get(current) + entry.getValue();
+                if (alt < distances.get(neighbor)) {
+                    distances.put(neighbor, alt);
+                    previous.put(neighbor, current);
+                    queue.add(neighbor);
+                }
+            }
+        }
+
+        List<Station> path = new ArrayList<>();
+        for (Station at = end; at != null; at = previous.get(at)) {
+            path.add(at);
+        }
+        Collections.reverse(path);
+        return path;
+    }
+
+    void printShortestPath(List<Station> path) {
+        if (path.isEmpty()) return;
+        StringBuilder sb = new StringBuilder();
+        Station prev = null;
+        String prevLine = "";
+        for (Station station : path) {
+            if (prev != null) {
+                for (String line : prev.lines) {
+                    if (station.lines.contains(line)) {
+                        if (!line.equals(prevLine)) {
+                            sb.append("\n换乘 ").append(line).append(" 到 ");
+                            prevLine = line;
+                        }
+                        break;
+                    }
+                }
+            }
+            sb.append(station.name).append(" ");
+            prev = station;
+        }
+        System.out.println(sb.toString());
+    }
+
+    double calculateFare(List<Station> path) {
+        if (path.isEmpty()) return 0;
+        double distance = 0;
+        for (int i = 1; i < path.size(); i++) {
+            Station from = path.get(i - 1);
+            Station to = path.get(i);
+            distance += from.neighbors.get(to);
+        }
+        return calculateFareByDistance(distance);
+    }
+
+    double calculateFareByDistance(double distance) {
+        if (distance <= 6) return 2;
+        if (distance <= 12) return 3;
+        if (distance <= 22) return 4;
+        if (distance <= 32) return 5;
+        return 6;
+    }
+
+    double calculateDiscountFare(List<Station> path) {
+        return calculateFare(path) * 0.9;
+    }
+
+    double calculatePassFare(List<Station> path, String passType) {
+        switch (passType) {
+            case "1日票":
+                return 18;
+            case "3日票":
+                return 45;
+            case "7日票":
+                return 90;
+            default:
+                return 0;
+        }
+    }
+}
+
