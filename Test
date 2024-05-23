@@ -1,1 +1,77 @@
+import java.io.*;
+import java.util.*;
+
+public class Test {
+    public static void main(String[] args) {
+        SubwaySystem subwaySystem = new SubwaySystem();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("subway.txt"));
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split("\t");
+                String stationA = parts[0];
+                String stationB = parts[1];
+                double distance = Double.parseDouble(parts[2]);
+                String lineName = parts[3];
+                subwaySystem.addConnection(stationA, stationB, distance, lineName);
+            }
+            br.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // 测试识别地铁中转站
+        Set<Station> transferStations = subwaySystem.getTransferStations();
+        System.out.println("地铁中转站:");
+        for (Station station : transferStations) {
+            System.out.println(station.name + " 经过线路: " + station.lines);
+        }
+
+        // 测试查询某一站点的邻近站点
+        try {
+            List<Station> nearbyStations = subwaySystem.getNearbyStations("华中科技大学", 1);
+            System.out.println("华中科技大学站 附近站点:");
+            for (Station station : nearbyStations) {
+                System.out.println(station.name + " 距离: " + station.neighbors.get(subwaySystem.stations.get("华中科技大学")));
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+
+        // 测试查询起点和终点之间的所有路径
+        try {
+            List<List<Station>> allPaths = subwaySystem.getAllPaths("起点站", "终点站");
+            System.out.println("起点站到终点站的所有路径:");
+            for (List<Station> path : allPaths) {
+                for (Station station : path) {
+                    System.out.print(station.name + " ");
+                }
+                System.out.println();
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+
+        // 测试查询起点和终点之间的最短路径
+        try {
+            List<Station> shortestPath = subwaySystem.getShortestPath("起点站", "终点站");
+            System.out.println("起点站到终点站的最短路径:");
+            subwaySystem.printShortestPath(shortestPath);
+
+            // 测试计算乘车费用
+            double fare = subwaySystem.calculateFare(shortestPath);
+            System.out.println("乘车费用: " + fare);
+
+            // 测试计算武汉通费用
+            double discountFare = subwaySystem.calculateDiscountFare(shortestPath);
+            System.out.println("武汉通费用: " + discountFare);
+
+            // 测试计算日票费用
+            double passFare = subwaySystem.calculatePassFare(shortestPath, "1日票");
+            System.out.println("日票费用: " + passFare);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+}
 
