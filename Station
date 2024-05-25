@@ -1,9 +1,11 @@
+package model;
+
 import java.util.HashSet;
 import java.util.Set;
 
-class Station {
-    String name;
-    Set<String> lines;
+public class Station {
+    private String name;
+    private Set<String> lines;
 
     public Station(String name) {
         this.name = name;
@@ -14,8 +16,16 @@ class Station {
         lines.add(line);
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public Set<String> getLines() {
+        return lines;
+    }
+
     @Override
     public String toString() {
-        return name + " through " + lines;
+        return name + " " + lines;
     }
 }
