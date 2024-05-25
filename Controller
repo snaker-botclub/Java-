@@ -1,0 +1,42 @@
+package controller;
+
+import model.SubwaySystem;
+
+import java.util.List;
+import java.util.Set;
+
+public class SubwayController {
+    private SubwaySystem subwaySystem;
+
+    public SubwayController(SubwaySystem subwaySystem) {
+        this.subwaySystem = subwaySystem;
+    }
+
+    public void loadSubwayData(String filename) {
+        subwaySystem.loadSubwayData(filename);
+    }
+
+    public Set<String> getTransferStations() {
+        return subwaySystem.getTransferStations();
+    }
+
+    public List<String> getNearbyStations(String stationName, int n) {
+        return subwaySystem.getNearbyStations(stationName, n);
+    }
+
+    public List<List<String>> getAllPaths(String start, String end) {
+        return subwaySystem.getAllPaths(start, end);
+    }
+
+    public List<String> getShortestPath(String start, String end) {
+        return subwaySystem.getShortestPath(start, end);
+    }
+
+    public int calculateFare(List<String> path) {
+        return subwaySystem.calculateFare(path);
+    }
+
+    public int calculateDiscountFare(List<String> path, boolean useWuhanTong, int days) {
+        return subwaySystem.calculateDiscountFare(path, useWuhanTong, days);
+    }
+}
