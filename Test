@@ -1,46 +1,53 @@
+package test;
+
+import controller.SubwayController;
+import model.SubwaySystem;
+
+import java.util.List;
+import java.util.Set;
+
 public class Test {
     public static void main(String[] args) {
         SubwaySystem subwaySystem = new SubwaySystem();
-        try {
-            subwaySystem.loadSubwayData("C:\\Users\\wcq12\\Desktop\\学习文件\\subway.txt");
-        } catch (IOException e) {
-            System.err.println("无法读取地铁数据文件");
-            return;
-        }
+        SubwayController controller = new SubwayController(subwaySystem);
 
-        // 功能1：识别所有中转站
-        System.out.println("所有地铁中转站：");
-        Set<String> transferStations = subwaySystem.getTransferStations();
+        controller.loadSubwayData("C:\\Users\\wcq12\\Desktop\\学习文件\\subway.txt");
+
+        // Test transfer stations
+        Set<String> transferStations = controller.getTransferStations();
+        System.out.println("Transfer Stations:");
         for (String station : transferStations) {
             System.out.println(station);
         }
 
-        // 功能2：查询某一站点距离小于n的所有站点
-        System.out.println("距离华中科技大学站距离小于1公里的站点：");
-        List<String> nearbyStations = subwaySystem.getNearbyStations("华中科技大学站", 1);
+        // Test nearby stations
+        List<String> nearbyStations = controller.getNearbyStations("华中科技大学站", 2);
+        System.out.println("\nNearby Stations:");
         for (String station : nearbyStations) {
             System.out.println(station);
         }
 
-        // 功能3：返回所有连接起点和终点的路径集合
-        System.out.println("从华中科技大学站到光谷广场站的所有路径：");
-        List<List<String>> allPaths = subwaySystem.getAllPaths("华中科技大学站", "光谷广场站");
+        // Test all paths
+        List<List<String>> allPaths = controller.getAllPaths("起点站", "终点站");
+        System.out.println("\nAll Paths:");
         for (List<String> path : allPaths) {
             System.out.println(path);
         }
 
-        // 功能4：返回起点和终点之间的最短路径
-        System.out.println("从华中科技大学站到光谷广场站的最短路径：");
-        List<String> shortestPath = subwaySystem.getShortestPath("华中科技大学站", "光谷广场站");
-        subwaySystem.printShortestPath(shortestPath);
+        // Test shortest path
+        List<String> shortestPath = controller.getShortestPath("起点站", "终点站");
+        System.out.println("\nShortest Path:");
+        System.out.println(shortestPath);
 
-        // 功能5：打印最短路径
-        subwaySystem.printShortestPath(shortestPath);
+        // Test fare calculation
+        int fare = controller.calculateFare(shortestPath);
+        System.out.println("\nFare:");
+        System.out.println(fare);
 
-        // 功能6：计算乘车费用
-        int fare = subwaySystem.calculateFare(shortestPath);
-        System.out.println("乘车费用：" + fare + " 元");
+        // Test discount fare calculation
+        int discountFare = controller.calculateDiscountFare(shortestPath, true, 0);
+        System.out.println("\nDiscount Fare:");
+        System.out.println(discountFare);
+    }
+}
 
-        // 功能7：计算武汉通和日票的费用
-        int wuhanTongFare = subwaySystem.calculateDiscountFare(shortestPath, true, 0);
-        System.out.println("
