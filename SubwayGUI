@@ -1,0 +1,79 @@
+package view;
+
+import controller.SubwayController;
+import model.SubwaySystem;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
+
+public class SubwayGUI {
+    private SubwayController controller;
+
+    public SubwayGUI(SubwayController controller) {
+        this.controller = controller;
+    }
+
+    public void createAndShowGUI() {
+        JFrame frame = new JFrame("武汉地铁模拟系统");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(800, 600);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(5, 2));
+
+        JLabel startLabel = new JLabel("起点站：");
+        JTextField startField = new JTextField();
+        JLabel endLabel = new JLabel("终点站：");
+        JTextField endField = new JTextField();
+        JButton findPathButton = new JButton("查找最短路径");
+        JTextArea resultArea = new JTextArea();
+
+        findPathButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String start = startField.getText();
+                String end = endField.getText();
+                List<String> path = controller.getShortestPath(start, end);
+                if (path.isEmpty()) {
+                    resultArea.setText("未找到路径！");
+                } else {
+                    StringBuilder result = new StringBuilder();
+                    result.append("最短路径：\n");
+                    for (String station : path) {
+                        result.append(station).append("\n");
+                    }
+                    int fare = controller.calculateFare(path);
+                    result.append("票价：").append(fare).append("元\n");
+                    int discountFare = controller.calculateDiscountFare(path, true, 0);
+                    result.append("武汉通票价：").append(discountFare).append("元\n");
+                    resultArea.setText(result.toString());
+                }
+            }
+        });
+
+        panel.add(startLabel);
+        panel.add(startField);
+        panel.add(endLabel);
+        panel.add(endField);
+        panel.add(findPathButton);
+        panel.add(new JScrollPane(resultArea));
+
+        frame.add(panel);
+        frame.setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        SubwaySystem subwaySystem = new SubwaySystem();
+        SubwayController controller = new SubwayController(subwaySystem);
+
+        controller.loadSubwayData("C:\\Users\\wcq12\\Desktop\\学习文件\\subway.txt");
+
+        SwingUtilities.invokeLater(() -> {
+            SubwayGUI gui = new SubwayGUI(controller);
+            gui.createAndShowGUI();
+        });
+    }
+}
