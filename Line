@@ -20,5 +20,9 @@ public class Line {
     public Map<String, Map<String, Integer>> getConnections() {
         return connections;
     }
+
+    public String getName() {
+        return name;
+    }
 }
 
