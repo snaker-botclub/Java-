@@ -47,31 +47,148 @@ public class SubwaySystem {
 
     public List<String> getNearbyStations(String stationName, int n) {
         List<String> nearbyStations = new ArrayList<>();
-        // Implement the logic to get nearby stations
+        if (!stations.containsKey(stationName)) {
+            throw new IllegalArgumentException("Station not found: " + stationName);
+        }
+        // BFS for finding nearby stations within distance n
+        Queue<String> queue = new LinkedList<>();
+        Map<String, Integer> distances = new HashMap<>();
+        queue.add(stationName);
+        distances.put(stationName, 0);
+
+        while (!queue.isEmpty()) {
+            String current = queue.poll();
+            int currentDistance = distances.get(current);
+
+            if (currentDistance < n) {
+                for (Line line : lines.values()) {
+                    if (line.getConnections().containsKey(current)) {
+                        for (Map.Entry<String, Integer> entry : line.getConnections().get(current).entrySet()) {
+                            String neighbor = entry.getKey();
+                            int distance = entry.getValue();
+                            int totalDistance = currentDistance + distance;
+
+                            if (totalDistance <= n && !distances.containsKey(neighbor)) {
+                                distances.put(neighbor, totalDistance);
+                                queue.add(neighbor);
+                                nearbyStations.add(neighbor + " (" + line.getName() + ", " + totalDistance + " km)");
+                            }
+                        }
+                    }
+                }
+            }
+        }
         return nearbyStations;
     }
 
     public List<List<String>> getAllPaths(String start, String end) {
         List<List<String>> paths = new ArrayList<>();
-        // Implement the logic to get all paths
+        if (!stations.containsKey(start) || !stations.containsKey(end)) {
+            throw new IllegalArgumentException("Invalid start or end station");
+        }
+        findAllPaths(start, end, new HashSet<>(), new ArrayList<>(), paths);
         return paths;
+    }
+
+    private void findAllPaths(String current, String end, Set<String> visited, List<String> path, List<List<String>> paths) {
+        visited.add(current);
+        path.add(current);
+
+        if (current.equals(end)) {
+            paths.add(new ArrayList<>(path));
+        } else {
+            for (Line line : lines.values()) {
+                if (line.getConnections().containsKey(current)) {
+                    for (String neighbor : line.getConnections().get(current).keySet()) {
+                        if (!visited.contains(neighbor)) {
+                            findAllPaths(neighbor, end, visited, path, paths);
+                        }
+                    }
+                }
+            }
+        }
+        path.remove(path.size() - 1);
+        visited.remove(current);
     }
 
     public List<String> getShortestPath(String start, String end) {
         List<String> path = new ArrayList<>();
-        // Implement the logic to get the shortest path
-        return path;
+        if (!stations.containsKey(start) || !stations.containsKey(end)) {
+            throw new IllegalArgumentException("Invalid start or end station");
+        }
+        Map<String, Integer> distances = new HashMap<>();
+        Map<String, String> previous = new HashMap<>();
+        PriorityQueue<String> queue = new PriorityQueue<>(Comparator.comparingInt(distances::get));
+
+        for (String station : stations.keySet()) {
+            distances.put(station, Integer.MAX_VALUE);
+        }
+        distances.put(start, 0);
+        queue.add(start);
+
+        while (!queue.isEmpty()) {
+            String current = queue.poll();
+
+            if (current.equals(end)) {
+                for (String at = end; at != null; at = previous.get(at)) {
+                    path.add(at);
+                }
+                Collections.reverse(path);
+                return path;
+            }
+
+            for (Line line : lines.values()) {
+                if (line.getConnections().containsKey(current)) {
+                    for (Map.Entry<String, Integer> entry : line.getConnections().get(current).entrySet()) {
+                        String neighbor = entry.getKey();
+                        int distance = entry.getValue();
+                        int totalDistance = distances.get(current) + distance;
+
+                        if (totalDistance < distances.get(neighbor)) {
+                            distances.put(neighbor, totalDistance);
+                            previous.put(neighbor, current);
+                            queue.add(neighbor);
+                        }
+                    }
+                }
+            }
+        }
+        return path; // Return empty path if no path found
     }
 
     public int calculateFare(List<String> path) {
-        int fare = 0;
-        // Implement the logic to calculate fare
-        return fare;
+        int totalDistance = 0;
+        for (int i = 0; i < path.size() - 1; i++) {
+            String start = path.get(i);
+            String end = path.get(i + 1);
+            for (Line line : lines.values()) {
+                if (line.getConnections().containsKey(start) && line.getConnections().get(start).containsKey(end)) {
+                    totalDistance += line.getConnections().get(start).get(end);
+                    break;
+                }
+            }
+        }
+        // Implement fare calculation based on total distance
+        return calculateFareBasedOnDistance(totalDistance);
+    }
+
+    private int calculateFareBasedOnDistance(int distance) {
+        // Fare calculation logic
+        if (distance <= 6) return 2;
+        else if (distance <= 12) return 3;
+        else if (distance <= 22) return 4;
+        else if (distance <= 32) return 5;
+        else return 6;
     }
 
     public int calculateDiscountFare(List<String> path, boolean useWuhanTong, int days) {
-        int fare = 0;
-        // Implement the logic to calculate discounted fare
+        int fare = calculateFare(path);
+        if (useWuhanTong) {
+            fare *= 0.9;
+        }
+        if (days > 0) {
+            return 0; // Using day pass
+        }
         return fare;
     }
 }
