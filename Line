@@ -1,9 +1,11 @@
+package model;
+
 import java.util.HashMap;
 import java.util.Map;
 
-class Line {
-    String name;
-    Map<String, Map<String, Integer>> connections;
+public class Line {
+    private String name;
+    private Map<String, Map<String, Integer>> connections;
 
     public Line(String name) {
         this.name = name;
@@ -11,7 +13,12 @@ class Line {
     }
 
     public void addConnection(String start, String end, int distance) {
-        connections.computeIfAbsent(start, k -> new HashMap<>()).put(end, distance);
-        connections.computeIfAbsent(end, k -> new HashMap<>()).put(start, distance);
+        connections.putIfAbsent(start, new HashMap<>());
+        connections.get(start).put(end, distance);
+    }
+
+    public Map<String, Map<String, Integer>> getConnections() {
+        return connections;
     }
 }
+
